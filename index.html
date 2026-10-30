@@ -1,0 +1,950 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Repas du jour</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍽️</text></svg>">
+<style>
+:root{--bg:#F2F2F7;--card:#FFF;--label:#000;--secondary:#8E8E93;--sep:#C6C6C8;--fill:#E5E5EA;--blue:#007AFF;--green:#34C759;--red:#FF3B30;--orange:#FF9500;--bar:rgba(249,249,249,.94);color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#000;--card:#1C1C1E;--label:#fff;--sep:#38383A;--fill:#2C2C2E;--bar:rgba(28,28,30,.94);color-scheme:dark}}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;background:var(--bg);color:var(--label);font:15px/1.4 -apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",Arial,sans-serif;padding-bottom:calc(150px + env(safe-area-inset-bottom,0px))}
+header,main,nav{max-width:680px;margin:auto}
+header{padding:calc(env(safe-area-inset-top,0px) + 16px) 16px 4px}
+h1{font-size:34px;font-weight:700;letter-spacing:.37px;margin:0}
+h2{font-size:20px;font-weight:700;margin:8px 0}
+main{padding:0 16px}
+section{display:none}section.on{display:block}
+.group{background:var(--card);border-radius:12px;overflow:hidden;margin:8px 0 22px}
+.group-title{font-size:13px;color:var(--secondary);padding:22px 16px 6px}
+.item{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 16px;min-height:44px;border-bottom:.5px solid var(--sep)}
+.item:last-child{border-bottom:0}
+.item .main{flex:1;min-width:0;cursor:pointer}
+.item .sub{color:var(--secondary);font-size:13px;margin-top:1px}
+.field{display:flex;align-items:center;gap:12px;padding:0 16px;min-height:44px;border-bottom:.5px solid var(--sep)}
+.field:last-child{border-bottom:0}
+.field label{width:120px;flex-shrink:0}
+input,select,textarea{font:inherit;color:var(--blue);background:transparent;border:0;outline:0;width:100%;padding:11px 0;text-align:right;appearance:none;-webkit-appearance:none}
+textarea{text-align:left;min-height:110px;padding:12px 0;color:var(--label);resize:none}
+input::placeholder,textarea::placeholder{color:var(--secondary)}
+.field.area{align-items:flex-start}
+.btn{display:block;width:100%;padding:14px;border:0;background:none;color:var(--blue);font:inherit;font-weight:600;cursor:pointer;text-align:center}
+.btn.danger{color:var(--label)}
+.pill{border:0;border-radius:999px;background:var(--fill);color:var(--blue);font:inherit;font-size:15px;font-weight:600;padding:8px 14px;min-height:44px;cursor:pointer;white-space:nowrap}
+.pill.solid{background:var(--blue);color:#fff}
+.chip{display:inline-block;font-size:12px;font-weight:600;padding:2px 8px;border-radius:6px;background:var(--fill);color:var(--secondary);margin-right:4px}
+.chip.green{background:rgba(52,199,89,.18);color:#248A3D}
+.soon{color:var(--red);font-weight:600}
+.warn{color:var(--orange);font-size:14px;margin-top:4px}
+.muted{color:var(--secondary);font-size:13px}
+.empty{padding:16px;color:var(--secondary);text-align:center}
+.meter{height:6px;border-radius:3px;background:var(--fill);overflow:hidden;margin:8px 0 4px}
+.meter i{display:block;height:100%;background:var(--green);border-radius:3px}
+.switch{display:inline-block;position:relative;width:51px;height:31px;flex-shrink:0}
+.switch input{-webkit-appearance:none;appearance:none;display:block;width:51px;height:31px;margin:0;padding:0;border-radius:16px;border:0;background:var(--fill);cursor:pointer;transition:background .2s;text-align:left}
+.switch input:checked{background:var(--green)}
+.switch span{display:none}
+input.sel,.grid input[type=checkbox]{width:22px;height:22px;accent-color:var(--blue);text-align:center;padding:0}
+nav{position:fixed;left:0;right:0;bottom:0;display:flex;justify-content:space-around;padding:8px 6px calc(8px + env(safe-area-inset-bottom,0px));background:var(--bar);backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px);border-top:.5px solid var(--sep);z-index:5;left:50%;transform:translateX(-50%);width:100%}
+nav button{flex:1;border:0;background:none;color:var(--secondary);font:inherit;font-size:11px;font-weight:500;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;padding:4px 0}
+nav button .ic{font-size:22px;line-height:1}
+nav button[aria-selected="true"]{color:var(--blue)}
+#bulk{display:none;position:fixed;left:50%;transform:translateX(-50%);bottom:72px;width:min(680px,calc(100% - 24px));align-items:center;gap:8px;flex-wrap:wrap;padding:10px 12px;background:var(--card);border-radius:14px;box-shadow:0 4px 20px rgba(0,0,0,.18);z-index:4}
+#bulk select{width:auto;color:var(--blue);text-align:left;padding:6px 0}
+#bulk .grow{flex:1;font-weight:600}
+#sheetWrap{display:none}
+.scrim{position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:10}
+.sheet{position:fixed;left:0;right:0;bottom:0;max-height:88vh;overflow:auto;background:var(--bg);border-radius:14px 14px 0 0;padding:4px 16px calc(16px + env(safe-area-inset-bottom,0px));z-index:11}
+.grid{width:100%;border-collapse:collapse;background:var(--card);border-radius:12px;overflow:hidden;font-size:15px}
+.grid th{color:var(--secondary);font-weight:500;font-size:13px;text-align:left;padding:10px}
+.grid td{padding:4px 10px;border-top:.5px solid var(--sep)}
+.grid td input,.grid td select{text-align:left;padding:8px 0;width:100%}
+.grid td select{color:var(--label)}
+@media (min-width:900px){
+  header,main,nav{max-width:1040px}
+  nav{width:min(1040px,100%)}
+  .sheet{left:50%;transform:translateX(-50%);width:520px;bottom:auto;top:12vh;border-radius:14px}
+  #bulk{bottom:72px}
+}
+.icons{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:12px;padding:4px 0 6px;grid-auto-rows:1fr}
+.ico{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-height:120px;padding:12px 8px;border:0;border-radius:16px;background:var(--card);box-shadow:0 2px 10px rgba(0,0,0,.08);color:var(--label);font:inherit;cursor:pointer;min-width:0}
+.ico span{font-size:28px;line-height:1.1}
+.ico small{font-size:12px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ico.exp{color:var(--red);box-shadow:0 0 0 1.5px var(--red),0 2px 10px rgba(0,0,0,.08)}
+.addbtn{width:40px;height:40px;border-radius:50%;border:0;background:var(--blue);color:#fff;font-size:26px;font-weight:500;line-height:1;cursor:pointer;box-shadow:0 2px 8px rgba(0,122,255,.35);flex-shrink:0}
+[hidden]{display:none !important}
+#toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(150px + env(safe-area-inset-bottom,0px));display:flex;align-items:center;gap:14px;background:var(--label);color:var(--bg);padding:12px 16px;border-radius:14px;box-shadow:0 6px 20px rgba(0,0,0,.25);z-index:20;max-width:calc(100% - 32px);font-size:15px}
+#toast[hidden]{display:none}
+#toast button{border:0;background:none;color:var(--blue);font:inherit;font-weight:700;cursor:pointer;padding:0}
+#addBtn{position:fixed;right:16px;bottom:calc(84px + env(safe-area-inset-bottom,0px));width:56px;height:56px;font-size:30px;z-index:6;box-shadow:0 4px 14px rgba(0,122,255,.4)}
+.unit-h{font-size:13px;font-weight:600;color:var(--secondary);margin:10px 0 4px;grid-column:1/-1}
+.ico em{font-style:normal;font-size:12px;color:var(--secondary);white-space:nowrap}
+.qbar{display:block;width:100%;height:5px;border-radius:3px;background:var(--fill);overflow:hidden;margin-top:2px}
+.qbar i{display:block;height:100%;background:var(--blue);border-radius:3px}
+.dots{font-size:10px;letter-spacing:1px;color:var(--blue);line-height:1.2;margin-top:2px;white-space:nowrap;overflow:hidden;max-width:100%}
+@media (min-width:900px){#placeView{column-count:2;column-gap:12px}#placeView .group{break-inside:avoid}}
+.rgrid{display:grid;grid-template-columns:1fr;gap:10px;margin:8px 0 22px}
+.rcard{position:relative;background:var(--card);border-radius:14px;padding:14px 16px;min-width:0}
+.pers{display:inline-flex;align-items:center;border:1px solid var(--sep);border-radius:999px;padding:2px;font-size:13px;color:var(--secondary);margin:4px 0 2px}
+.pers input{width:24px;text-align:center;background:transparent;border:0;color:var(--label);font:inherit;font-size:13px;font-weight:600;padding:0}
+.pers span{padding:0 2px}
+.pers button{border:0;background:none;color:var(--blue);font:inherit;font-size:16px;width:24px;height:24px;border-radius:50%;cursor:pointer;padding:0;line-height:1}
+.rtitle{font-size:21px;font-weight:700;padding-right:28px;letter-spacing:-.2px;margin:8px 0 2px}
+.pill.sm,.rcard .pill{min-height:32px;padding:5px 12px;font-size:13px}
+.pill.gray{background:var(--fill);color:var(--secondary)}
+.sw{position:relative;display:inline-block;width:51px;height:31px;flex-shrink:0;cursor:pointer}
+.sw input{position:absolute;opacity:0;width:0;height:0;margin:0;padding:0;border:0}
+.sw i{position:absolute;inset:0;border-radius:16px;background:var(--fill);transition:background .2s}
+.sw i::after{content:"";position:absolute;top:2px;left:2px;width:27px;height:27px;border-radius:50%;background:#fff;box-shadow:0 2px 4px rgba(0,0,0,.25);transition:transform .2s}
+.sw input:checked + i{background:var(--green)}
+.sw input:checked + i::after{transform:translateX(20px)}
+.sw input:focus-visible + i{outline:2px solid var(--blue);outline-offset:2px}
+select{appearance:none;-webkit-appearance:none;width:auto;max-width:60%;background:transparent url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='9' height='14'><path d='M1 1l6 6-6 6' stroke='%238E8E93' stroke-width='1.8' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>") no-repeat right 0 center;padding:6px 16px 6px 0;margin:0;text-align:right;color:var(--blue);font-size:15px}
+.xbtn{position:absolute;top:0;right:0;width:32px;height:32px;border-radius:50%;border:0;background:var(--fill);color:var(--secondary);font-size:15px;cursor:pointer;line-height:1;padding:0}
+.tags{display:flex;gap:5px;flex-wrap:wrap;margin:2px 0 6px}
+.tagb{display:inline-flex;align-items:center;font-size:11px;font-weight:600;padding:2px 8px;border-radius:999px;border:1px solid var(--sep);color:var(--secondary);background:transparent;line-height:1.3}
+.tagb.green{border-color:var(--green);color:#248A3D}
+.ricons{font-size:22px;line-height:1.3;margin:4px 0;letter-spacing:2px}
+.dot{position:absolute;top:18px;right:16px;width:14px;height:14px;border-radius:50%}
+@media (min-width:900px){.rgrid{grid-template-columns:1fr 1fr 1fr}}
+.pp-group{background:rgba(255,149,0,.12);border:1.5px dashed var(--orange)}
+.ico.ppi{background:rgba(255,149,0,.10)}
+.chip.pp{background:var(--orange);color:#fff}
+tr.ppr td{background:rgba(255,149,0,.10)}
+@media (max-width:480px){.field label{width:100px}}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--blue);outline-offset:2px;border-radius:6px}
+
+/* ===== Habillage « verre » inspiré de l'image de référence (WWDC25) ===== */
+:root{--bg:#EEF1F7;--card:rgba(255,255,255,.66);--glass-line:rgba(255,255,255,.75);--fill:rgba(120,120,128,.14);--sep:rgba(60,60,67,.12);--sheet:rgba(250,251,253,.86);--bar:rgba(255,255,255,.6);--label:#111;--secondary:rgba(60,60,67,.62);--blue:#0A84FF;--green:#30D158;--red:#FF453A;--orange:#FF9F0A}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0B0E16;--card:rgba(255,255,255,.07);--glass-line:rgba(255,255,255,.13);--fill:rgba(120,120,128,.28);--sep:rgba(235,235,245,.10);--sheet:rgba(30,33,44,.84);--bar:rgba(30,33,45,.62);--label:#F5F5F7;--secondary:rgba(235,235,245,.6);--blue:#0A84FF;--green:#30D158;--red:#FF453A;--orange:#FF9F0A}}
+body{min-height:100vh;background:radial-gradient(900px 520px at 8% -8%,rgba(10,132,255,.16),transparent 60%),radial-gradient(760px 520px at 108% 8%,rgba(191,90,242,.12),transparent 60%),var(--bg) !important}
+.group,.rcard,.ico{background:var(--card);backdrop-filter:blur(22px) saturate(170%);-webkit-backdrop-filter:blur(22px) saturate(170%);border:.5px solid var(--glass-line);box-shadow:0 10px 30px rgba(0,0,0,.08),inset 0 1px 0 rgba(255,255,255,.22)}
+.group{border-radius:22px}
+.rcard{border-radius:22px;padding:16px 18px}
+.ico{border-radius:20px}
+.sheet{background:var(--sheet);backdrop-filter:blur(30px) saturate(180%);-webkit-backdrop-filter:blur(30px) saturate(180%);border:.5px solid var(--glass-line);border-radius:30px 30px 0 0;box-shadow:0 -12px 40px rgba(0,0,0,.22)}
+@media (min-width:900px){.sheet{border-radius:30px}}
+.scrim{background:rgba(0,0,0,.28)}
+.pill{border-radius:999px;background:var(--fill);color:var(--blue)}
+.pill.solid{background:linear-gradient(180deg,#3d9bff,#0a84ff);color:#fff;box-shadow:0 6px 16px rgba(10,132,255,.35)}
+.pill.gray{background:var(--fill);color:var(--secondary)}
+.pers{background:var(--fill);border:0;border-radius:999px;padding:3px}
+.pers button{background:var(--card);box-shadow:0 1px 3px rgba(0,0,0,.14)}
+.tagb{border:0;background:var(--fill);color:var(--secondary)}
+.tagb.green{background:rgba(48,209,88,.18);color:#30D158}
+.sw i{background:var(--fill)}
+.sw input:checked + i{background:var(--green);box-shadow:0 0 14px rgba(48,209,88,.45)}
+.sw i::after{box-shadow:0 3px 8px rgba(0,0,0,.25)}
+.xbtn{background:var(--fill);color:var(--secondary)}
+.dot{box-shadow:0 0 0 3px var(--card)}
+nav{width:min(440px,calc(100% - 24px));left:50%;transform:translateX(-50%);bottom:calc(12px + env(safe-area-inset-bottom,0px));border-radius:999px;padding:6px 8px;border:.5px solid var(--glass-line);box-shadow:0 14px 36px rgba(0,0,0,.22);background:var(--bar);backdrop-filter:blur(28px) saturate(180%);-webkit-backdrop-filter:blur(28px) saturate(180%)}
+nav button{border-radius:999px;padding:6px 4px;transition:background .2s}
+nav button[aria-selected="true"]{background:var(--fill);color:var(--blue)}
+nav button .ic{font-size:20px}
+#bulk{bottom:94px;border-radius:999px;background:var(--sheet);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border:.5px solid var(--glass-line)}
+#addBtn{bottom:98px;width:56px;height:56px;background:linear-gradient(180deg,#3d9bff,#0a84ff);box-shadow:0 10px 24px rgba(10,132,255,.45)}
+#toast{border-radius:999px;background:rgba(30,30,36,.82);color:#fff;backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}
+#toast button{color:#64B5FF}
+input,select,textarea{color:var(--blue)}
+textarea{color:var(--label)}
+.field .sw{width:51px;height:31px}
+:root{--blue-hi:#3d9bff}
+.pill.solid{background:linear-gradient(180deg,var(--blue-hi),var(--blue))}
+#addBtn{background:linear-gradient(180deg,var(--blue-hi),var(--blue))}
+</style>
+</head>
+<body>
+<header><div style="display:flex;align-items:center;justify-content:space-between;gap:12px"><h1 id="title">Aujourd’hui</h1><button id="addBtn" class="addbtn" aria-label="Ajouter">+</button></div><p id="sync" class="muted" style="margin:6px 0 0">Enregistrement sur cet appareil…</p></header>
+<main>
+
+<section id="jour" class="on" data-title="Aujourd’hui"><div id="jourBody"></div></section>
+
+<section id="stock" data-title="Stock">
+  <div class="group-title" hidden>Ajouter un aliment</div>
+  <form id="fStock" class="group" hidden></form>
+  <div style="display:flex;gap:8px;margin-top:14px"><button class="pill solid" id="vPlace">Rangements</button><button class="pill" id="vList">Liste</button></div>
+  <div class="group-title">Dans mes rangements</div>
+  <div id="stockList"></div>
+  <div id="placeView" style="display:none"></div>
+</section>
+
+<section id="recettes" data-title="Recettes">
+  <div class="group-title" hidden>Nouvelle recette</div>
+  <form id="fRec" class="group" hidden>
+    <div class="field"><label for="rN">Nom</label><input id="rN" placeholder="Nom de la recette" required></div>
+    <div class="field"><label for="rT">Durée (min)</label><input id="rT" type="number" min="0" placeholder="30"></div>
+    <div class="field"><label for="rF">Se congèle</label><label class="sw"><input type="checkbox" id="rF"><i></i></label></div>
+    <div class="field"><label for="rP">Pour (personnes)</label><input id="rP" type="number" min="1" value="4"></div>
+    <div class="field area"><label for="rI">Ingrédients</label><textarea id="rI" placeholder="nom | quantité | unité&#10;courgette | 2 | pièce"></textarea></div>
+    <div class="item"><button class="btn" type="submit">Enregistrer</button></div>
+  </form>
+  <div class="group-title">Mes recettes</div>
+  <div id="recList" class="rgrid"></div>
+</section>
+
+<section id="semaine" data-title="Semaine">
+  <div class="group-title" hidden>Ajouter au planning</div>
+  <form id="fPlan" class="group" hidden>
+    <div class="field"><label for="pD">Jour</label><input id="pD" type="date" required></div>
+    <div class="field"><label for="pS">Repas</label><select id="pS" onchange="$('#pN').value = this.value === 'midi-solo' ? 1 : 3"><option value="midi-solo">Midi (moi)</option><option value="soir-famille">Soir (famille)</option></select></div>
+    <div class="field"><label for="pN">Personnes</label><input id="pN" type="number" min="1" value="1"></div>
+    <div class="field"><label for="pR">Recette</label><select id="pR"></select></div>
+    <div class="item"><button class="btn" type="submit">Ajouter</button></div>
+  </form>
+  <div class="group-title">Prévu</div>
+  <div class="group" id="planList"></div>
+</section>
+
+<section id="courses" data-title="Courses">
+  <div class="group-title">À acheter</div>
+  <div class="group" id="courseList"></div>
+  <p class="muted" style="padding:0 16px">Calculée à partir de votre planning, moins votre stock.</p>
+</section>
+
+<section id="reglages" data-title="Réglages">
+  <div class="group-title">Couleur principale</div>
+  <div class="group" style="padding:18px 16px"><div id="swatches" style="display:flex;gap:14px;flex-wrap:wrap"></div></div>
+  <p class="muted" style="padding:0 4px">Utilisée pour les boutons et les actions principales.</p>
+</section>
+</main>
+
+<div id="bulk">
+  <span class="grow" id="bulkN"></span>
+  <select id="bulkP"></select>
+  <button class="pill solid" onclick="bulkMove()">Déplacer</button>
+  <button class="pill" onclick="bulkNP(true)">Non périssable</button>
+  <button class="pill" onclick="bulkNP(false)">Périssable</button>
+  <button class="pill" onclick="bulkDel()">Supprimer</button>
+  <button class="pill" onclick="bulkClear()">Annuler</button>
+</div>
+
+<div id="toast" hidden></div>
+<div id="sheetWrap"><div class="scrim" onclick="closeSheet()"></div><div class="sheet" id="sheetBody"></div></div>
+
+<nav role="tablist">
+  <button role="tab" data-tab="jour" aria-selected="true"><span class="ic">☀️</span>Aujourd’hui</button>
+  <button role="tab" data-tab="stock" aria-selected="false"><span class="ic">🧺</span>Stock</button>
+  <button role="tab" data-tab="recettes" aria-selected="false"><span class="ic">📖</span>Recettes</button>
+  <button role="tab" data-tab="semaine" aria-selected="false"><span class="ic">📅</span>Semaine</button>
+  <button role="tab" data-tab="courses" aria-selected="false"><span class="ic">🛒</span>Courses</button>
+  <button role="tab" data-tab="reglages" aria-selected="false"><span class="ic">⚙️</span>Réglages</button>
+</nav>
+
+<script>
+const KEY = 'repas-du-jour-v1';
+const CLOSED = ['g','kg','ml','cl','l','pièce','tranche','sachet','paquet','pot','boîte','brique','bouteille','tablette','gourde','portion'];
+const PLACES = ['Frigo','Congélateur','Placard','Garage'];
+const PI = {'Frigo':'🧊','Congélateur':'❄️','Placard':'🗄️','Garage':'🛠️'};
+const FAC = {g:1,kg:1000,ml:1,cl:10,l:1000};
+const SEED = [
+  {id:'r1', n:'Lasagnes maison', t:45, freeze:true, ing:[['pâtes à lasagne','250','g'],['viande hachée','500','g'],['tomates concassées','400','g'],['fromage râpé','150','g'],['oignon','1','pièce']]},
+  {id:'r2', n:'Soupe de légumes', t:30, freeze:true, ing:[['carotte','3','pièce'],['courgette','2','pièce'],['pomme de terre','3','pièce'],['oignon','1','pièce']]},
+  {id:'r3', n:'Poulet rôti et légumes', t:60, freeze:false, ing:[['poulet','1','pièce'],['pomme de terre','4','pièce'],['carotte','3','pièce'],['oignon','1','pièce']]},
+  {id:'r4', n:'Gratin de courgettes', t:35, freeze:true, ing:[['courgette','3','pièce'],['œuf','2','pièce'],['fromage râpé','100','g'],['crème fraîche','20','cl']]}
+];
+// Recettes ajoutées après coup : ajoutées une seule fois, sans écraser vos modifications
+const NEW_RECIPES = [
+  {id:'n1', ps:3, n:'Carbonara express', t:20, freeze:false, ing:[['tagliatelles','400','g'],['lardons fumé','200','g'],['œuf','3','pièce'],['gruyère râpé','80','g']]},
+  {id:'n2', ps:3, n:'Frittata jambon et gruyère', t:25, freeze:false, ing:[['œuf','4','pièce'],['jambon cru','100','g'],['gruyère râpé','80','g']]},
+  {id:'n3', ps:3, n:'Penne à la truite fumée', t:20, freeze:false, ing:[['pâtes penne','250','g'],['truite fumée','100','g'],['crème semi épaisse','1','brique']]},
+  {id:'n4', ps:3, n:'Cannelloni à la viande', t:50, freeze:true, ing:[['cannelloni','250','g'],['steak haché','2','pièce'],['sauce tomate','1','bouteille'],['gruyère râpé','100','g']]},
+  {id:'s1', ps:1, n:'Carbonara au jambon cru', t:20, freeze:false, ing:[['tagliatelles','100','g'],['jambon cru','40','g'],['crème semi épaisse','1','brique'],['gruyère râpé','20','g'],['œuf','1','pièce']]},
+  {id:'s2', ps:1, n:'Cordon-bleu, ratatouille et riz', t:30, freeze:false, ing:[['cordon-bleu','1','pièce'],['ratatouille','150','g'],['riz','100','g']]},
+  {id:'s3', ps:1, n:'Pilons de poulet rôtis aux oignons', t:50, freeze:false, ing:[['pilons de poulet','200','g'],['oignon rouge','0.5','pièce']]},
+  {id:'s4', ps:1, n:'Salade iceberg à la truite fumée', t:10, freeze:false, ing:[['salade iceberg','0.5','pièce'],['truite fumée','60','g'],['œuf','1','pièce']]},
+  {id:'s5', ps:1, n:'Nouilles de riz sautées au poulet', t:15, freeze:false, ing:[['nouilles de riz','100','g'],['filet de poulet','1','pièce'],['sauce fajitas','40','g'],['oignon rouge','0.5','pièce']]}
+];
+let S = {stock:[], recipes:[], family:[], plan:[], custom:[]};
+try { S = Object.assign(S, JSON.parse(localStorage.getItem(KEY) || '{}')); } catch(e) {}
+if (!S.recipes.length) S.recipes = SEED;
+let DOC = null;
+const SEL = new Set();
+
+const $ = s => document.querySelector(s);
+const fmtD = d => d ? String(d).split('-').reverse().join('/') : '';
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const uid = () => Math.random().toString(36).slice(2, 9);
+const today = () => new Date().toISOString().slice(0, 10);
+const num = v => parseFloat(v) || 0;
+const strip = s => s.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+const fam = u => ({g:'g',kg:'g',ml:'ml',cl:'ml',l:'ml'})[u] || ('c:' + u);
+const fac = u => FAC[u] || 1;
+const key = n => strip(String(n).trim().toLowerCase()).replace(/œ/g, 'oe').split(/\s+/).map(w => w.length > 3 ? w.replace(/[sx]$/, '') : w).join(' ');
+
+// Unités : liste fermée + unités ajoutées par l'utilisateur
+function canonUnit(u){
+  const s = strip(String(u || 'pièce').trim().toLowerCase()).replace(/s$/, '');
+  const M = {piece:'pièce', boite:'boîte', litre:'l', kilo:'kg'};
+  return M[s] || s;
+}
+function unitFrom(u){
+  const c = canonUnit(u);
+  if (!CLOSED.includes(c) && !S.custom.includes(c)) S.custom.push(c);
+  return c;
+}
+const unitOpts = () => [...CLOSED, ...S.custom];
+
+// Icônes : attribution automatique selon le nom, modifiable à la main (champ ic)
+const ICON_RULES = [
+  [/fromage|gruyere|chevre|saint moret|emmental|comte|mozza|parmesan/, '🧀'],
+  [/lardon/, '🥓'],
+  [/jambon|saucisse|merguez|chorizo|saucisson/, '🍖'],
+  [/steak|boeuf|tournedos|brochette|viande|hache/, '🥩'],
+  [/poulet|dinde|cuisse|pilon|filet de din/, '🍗'],
+  [/poisson|cabillaud|truite|sardine|maquereau|thon/, '🐟'],
+  [/oeuf/, '🥚'],
+  [/yaourt|lait|creme|beurre/, '🥛'],
+  [/farine|levure|semoule/, '🌾'],
+  [/sucre/, '🍬'],
+  [/chocolat/, '🍫'],
+  [/gateau|biscuit/, '🍰'],
+  [/pomme de terre/, '🥔'],
+  [/oignon/, '🧅'],
+  [/carotte/, '🥕'],
+  [/courgette/, '🥒'],
+  [/ratatouille|legume|petits pois/, '🥘'],
+  [/pate|tagliatelle|penne|torti|farfal|cannelloni|nouille|spaghetti/, '🍝'],
+  [/riz/, '🍚'],
+  [/lentille|pois chiche|haricot/, '🫘'],
+  [/tomate|arrabbiata/, '🍅'],
+  [/pesto|olive|moutarde|vinaigre|huile|sel|sauce|fajitas/, '🫙'],
+  [/jus/, '🧃'],
+  [/eau/, '💧'],
+  [/compote/, '🍎'],
+  [/croutons|galette|pain/, '🥖'],
+  [/cassoulet|conserve|boite/, '🥫'],
+];
+const ICONS = ['🧀','🥓','🍖','🥩','🍗','🐟','🥚','🥛','🌾','🍬','🍫','🍰','🥔','🧅','🥕','🥒','🥘','🍝','🍚','🫘','🍅','🫙','🧃','💧','🍎','🥖','🥫','🥣','📦'];
+const iconFor = n => { const k = key(n); const r = ICON_RULES.find(([re]) => re.test(k)); return r ? r[1] : '📦'; };
+const icoOf = i => i.ic || (i.pp ? '🍱' : iconFor(i.n));
+
+// Normalisation et regroupement : même produit + même rangement + même famille d'unité
+function normalize(){
+  NEW_RECIPES.forEach(r => { if (!S.recipes.some(x => x.id === r.id)) S.recipes.push(r); });
+  S.stock = S.stock.map(i => ({...i, n: String(i.n || '').trim(), u: unitFrom(i.u), pp: !!i.pp, np: !!i.np, exp: i.np ? '' : (i.exp || ''), added: i.added || today()}));
+  const out = [];
+  let merged = 0;
+  for (const it of S.stock){
+    const t = out.find(o => o.p === it.p && !!o.pp === !!it.pp && key(o.n) === key(it.n) && fam(o.u) === fam(it.u));
+    if (!t){ out.push(it); continue; }
+    t.q = +(num(t.q) + num(it.q) * fac(it.u) / fac(t.u)).toFixed(3);
+    t.np = t.np && it.np;
+    t.ic = t.ic || it.ic || '';
+    t.exp = (t.exp && it.exp) ? (t.exp < it.exp ? t.exp : it.exp) : (t.exp || it.exp || '');
+    t.added = (t.added && it.added) ? (t.added < it.added ? t.added : it.added) : (t.added || it.added || '');
+    merged++;
+  }
+  S.stock = out;
+  if (merged) toast(merged + ' ligne(s) regroupée(s)');
+  S.recipes.forEach(r => r.ing.forEach(x => { x[2] = unitFrom(x[2] || 'pièce'); }));
+}
+const isExpired = i => !i.np && !!i.exp && i.exp < today();
+function have(n, u){
+  return S.stock.filter(i => !i.pp && key(i.n) === key(n) && fam(i.u) === fam(u))
+    .reduce((s, i) => s + num(i.q) * fac(i.u), 0) / fac(u);
+}
+let PEOPLE = 1;
+const vp = r => r.view || PEOPLE;
+window.setPeople = d => { PEOPLE = Math.max(1, PEOPLE + d); S.recipes.forEach(r => { r.view = PEOPLE; }); save(); };
+window.rpeople = (id, d) => { const r = S.recipes.find(x => x.id === id); if (!r) return; r.view = Math.max(1, vp(r) + d); save(); };
+window.rsetpeople = (id, v) => { const r = S.recipes.find(x => x.id === id); if (!r) return; r.view = Math.max(1, num(v) || 1); save(); };
+const fmtQ = x => Math.round(x * 100) / 100;
+const FR = [[1/4,'1/4'],[1/3,'1/3'],[1/2,'1/2'],[2/3,'2/3'],[3/4,'3/4']];
+const fracQ = x => { const w = Math.floor(x + 1e-9), f = x - w; if (f < 0.02) return String(w); const m = FR.find(([v]) => Math.abs(f - v) < 0.03); if (!m) return String(fmtQ(x)).replace('.', ','); return (w ? w + ' ' : '') + m[1]; };
+const qtxt = (x, u) => fam(u).startsWith('c:') ? fracQ(x) : String(fmtQ(x)).replace('.', ',');
+function recipeStatus(r, n = vp(r)){
+  const f = n / (r.ps || 4);
+  const miss = r.ing.filter(([nm, q, u]) => have(nm, u) < num(q) * f).map(x => x[0]);
+  const old = r.ing.filter(([n, , u]) => S.stock.some(i => key(i.n) === key(n) && fam(i.u) === fam(u) && isExpired(i))).map(x => x[0]);
+  return {pct: Math.round((r.ing.length - miss.length) / r.ing.length * 100), miss, old};
+}
+function conflicts(r){
+  return S.family.map(f => {
+    const bad = r.ing.filter(([n]) => f.dis.some(d => key(n).includes(d) || d.includes(key(n)))).map(x => x[0]);
+    return bad.length ? {name: f.n, bad} : null;
+  }).filter(Boolean);
+}
+function needs(){
+  const m = {};
+  S.plan.forEach(p => {
+    const r = S.recipes.find(x => x.id === p.r);
+    if (!r) return;
+    r.ing.forEach(([n, q, u]) => {
+      const k = key(n) + '|' + fam(u);
+      if (!m[k]) m[k] = {n, u, need: 0};
+      m[k].need += num(q) * (p.n || 1) / (r.ps || 4) * fac(u) / fac(m[k].u);
+    });
+  });
+  return Object.values(m).map(x => ({...x, miss: x.need - have(x.n, x.u)})).filter(x => x.miss > 0.001);
+}
+
+// Formulaire commun (ajout et édition)
+function fields(it, p){
+  const u = canonUnit(it.u || 'g');
+  const opts = unitOpts().map(x => `<option ${x === u ? 'selected' : ''}>${esc(x)}</option>`).join('') + '<option value="__autre">Autre…</option>';
+  return `
+  <div class="field"><label for="${p}N">Aliment</label><input id="${p}N" value="${esc(it.n || '')}" placeholder="Pâtes" required></div>
+  <div class="field"><label for="${p}Q">Quantité</label><input id="${p}Q" type="number" step="any" min="0" value="${esc(it.q ?? '')}" placeholder="250" required></div>
+  <div class="field"><label for="${p}U">Unité</label><select class="unit" data-p="${p}" id="${p}U">${opts}</select></div>
+  <div class="field" id="${p}UAw" style="display:none"><label for="${p}UA">Nouvelle unité</label><input id="${p}UA" placeholder="ex. sachet"></div>
+  <div class="field"><label for="${p}PP">Plat prêt</label><label class="sw"><input type="checkbox" id="${p}PP" ${it.pp ? 'checked' : ''}><i></i></label></div>
+  <div class="field"><label for="${p}I">Icône</label><select id="${p}I"><option value="">${iconFor(it.n || '')} Automatique</option>${ICONS.map(x => `<option ${x === it.ic ? 'selected' : ''}>${x}</option>`).join('')}</select></div>
+  <div class="field"><label for="${p}P">Rangement</label><select id="${p}P">${PLACES.map(x => `<option value="${x}" ${x === it.p ? 'selected' : ''}>${PI[x]} ${x}</option>`).join('')}</select></div>
+  <div class="field"><label for="${p}NP">Non périssable</label><label class="sw"><input type="checkbox" class="np" data-p="${p}" id="${p}NP" ${it.np ? 'checked' : ''}><i></i></label></div>
+  <div class="field"><label for="${p}A">Ajouté le</label><input id="${p}A" type="date" value="${esc(it.added || today())}"></div>
+  <div class="field" id="${p}Ew" ${it.np ? 'style="display:none"' : ''}><label for="${p}E">Date limite</label><input id="${p}E" type="date" value="${esc(it.exp || '')}"></div>`;
+}
+function readUnit(p){
+  const v = $('#' + p + 'U').value;
+  return v === '__autre' ? unitFrom($('#' + p + 'UA').value || 'pièce') : unitFrom(v);
+}
+function readItem(p){
+  const np = $('#' + p + 'NP').checked;
+  return {n: $('#' + p + 'N').value.trim(), q: $('#' + p + 'Q').value, u: readUnit(p), p: $('#' + p + 'P').value, np, pp: $('#' + p + 'PP').checked, ic: $('#' + p + 'I').value, added: $('#' + p + 'A').value || today(), exp: np ? '' : $('#' + p + 'E').value};
+}
+document.addEventListener('change', e => {
+  const t = e.target;
+  if (t.classList.contains('unit')) $('#' + t.dataset.p + 'UAw').style.display = t.value === '__autre' ? '' : 'none';
+  if (t.classList.contains('np')) $('#' + t.dataset.p + 'Ew').style.display = t.checked ? 'none' : '';
+  if (t.classList.contains('sel')){ t.checked ? SEL.add(t.dataset.id) : SEL.delete(t.dataset.id); updateBulk(); }
+});
+
+// Stock : liste (mobile) ou tableau éditable (ordinateur)
+const placeRank = p => PLACES.indexOf(p);
+function sortStock(a, b){ return placeRank(a.p) - placeRank(b.p) || fam(a.u).localeCompare(fam(b.u)) || a.u.localeCompare(b.u) || (num(a.q) * fac(a.u) - num(b.q) * fac(b.u)); }
+// Regroupe les articles par unité en gardant l'ordre de tri
+const groupByUnit = arr => { const out = []; arr.forEach(i => { let g = out.find(x => x[0] === i.u); if (!g) out.push(g = [i.u, []]); g[1].push(i); }); return out; };
+function expTxt(i){
+  const add = i.added ? `<span class="muted">ajouté le ${fmtD(i.added)}</span>` : '';
+  let st;
+  if (i.np) st = '<span class="chip">Non périssable</span>';
+  else if (!i.exp) st = '<span class="muted">pas de date limite</span>';
+  else if (isExpired(i)) st = `<span style="color:var(--red);font-weight:700">Périmé depuis le ${fmtD(i.exp)}</span>`;
+  else { const soon = (new Date(i.exp) - new Date(today())) / 864e5 <= 3; st = `<span class="${soon ? 'soon' : 'muted'}">${soon ? 'À utiliser vite · ' : ''}avant le ${fmtD(i.exp)}</span>`; }
+  return st + (add ? ' · ' + add : '');
+}
+function rowList(i){
+  return `<div class="item">
+      <input type="checkbox" class="sel" data-id="${i.id}" ${SEL.has(i.id) ? 'checked' : ''} style="width:22px;height:22px;accent-color:var(--blue)">
+      <div class="main" onclick="openEdit('${i.id}')"><div>${icoOf(i)} ${esc(i.n)} <span class="muted">${esc(i.q)} ${esc(i.u)}</span></div>
+        <div class="sub">${i.pp ? '<span class="chip pp">Plat prêt</span>' : ''}<span class="chip">${esc(i.p)}</span>${expTxt(i)}</div></div>
+      <div style="display:flex;gap:6px"><button class="pill solid" onclick="openUse('${i.id}')">Utiliser</button><button class="pill" onclick="openEdit('${i.id}')">Modifier</button></div></div>`;
+}
+function renderStock(){
+  const wide = matchMedia('(min-width:900px)').matches;
+  const items = [...S.stock].sort(sortStock);
+  if (!items.length){ $('#stockList').innerHTML = '<div class="empty">Rien en stock pour l’instant.</div>'; updateBulk(); return; }
+  if (wide){
+    $('#stockList').innerHTML = `<table class="grid"><thead><tr><th></th><th>Aliment</th><th>Quantité</th><th>Unité</th><th>Rangement</th><th>Non périssable</th><th>Date limite</th><th>Ajouté le</th><th></th></tr></thead><tbody>` +
+      items.map(i => `<tr class="${i.pp ? 'ppr' : ''}">
+        <td><input type="checkbox" class="sel" data-id="${i.id}" ${SEL.has(i.id) ? 'checked' : ''}></td>
+        <td><input value="${esc(i.n)}" onchange="patch('${i.id}','n',this.value)">${i.pp ? ' <span class="chip pp">Plat prêt</span>' : ''}</td>
+        <td><input type="number" step="any" value="${esc(i.q)}" onchange="patch('${i.id}','q',this.value)"></td>
+        <td><select onchange="patch('${i.id}','u',this.value)">${unitOpts().map(x => `<option ${x === i.u ? 'selected' : ''}>${esc(x)}</option>`).join('')}</select></td>
+        <td><select onchange="patch('${i.id}','p',this.value)">${PLACES.map(x => `<option value="${x}" ${x === i.p ? 'selected' : ''}>${PI[x]} ${x}</option>`).join('')}</select></td>
+        <td><label class="sw"><input type="checkbox" ${i.np ? 'checked' : ''} onchange="patch('${i.id}','np',this.checked)"><i></i></label></td>
+        <td><input type="date" value="${esc(i.exp)}" style="color:${isExpired(i) ? 'var(--red)' : 'var(--blue)'};font-weight:${isExpired(i) ? '700' : '400'}" ${i.np ? 'disabled' : ''} onchange="patch('${i.id}','exp',this.value)"></td>
+        <td><input type="date" value="${esc(i.added)}" onchange="patch('${i.id}','added',this.value)"></td>
+        <td><div style="display:flex;gap:6px"><button class="pill solid" onclick="openUse('${i.id}')">Utiliser</button><button class="pill" onclick="delItem('${i.id}')">Supprimer</button></div></td></tr>`).join('') + '</tbody></table>';
+  } else {
+    const ings = items.filter(i => !i.pp), pps = items.filter(i => i.pp);
+    $('#stockList').innerHTML = (ings.length ? `<div class="group">${groupByUnit(ings).map(([u, arr]) => `` + arr.map(rowList).join('')).join('')}</div>` : '') +
+      (pps.length ? `<div class="group-title">Plats prêts</div><div class="group pp-group">${groupByUnit(pps).map(([u, arr]) => `` + arr.map(rowList).join('')).join('')}</div>` : '');
+  }
+  updateBulk();
+}
+function updateBulk(){
+  $('#bulk').style.display = SEL.size ? 'flex' : 'none';
+  $('#addBtn').style.display = SEL.size ? 'none' : '';
+  $('#bulkN').textContent = SEL.size + ' sélectionné' + (SEL.size > 1 ? 's' : '');
+  $('#bulkP').innerHTML = PLACES.map(p => `<option value="${p}">${PI[p]} ${p}</option>`).join('');
+}
+function done(){ SEL.clear(); save(); }
+let toastT;
+function toast(msg, undo){
+  const t = $('#toast');
+  t.innerHTML = `<span>${esc(msg)}</span>` + (undo ? '<button id="undoBtn">Annuler</button>' : '');
+  t.hidden = false;
+  if (undo) $('#undoBtn').onclick = () => { undo(); t.hidden = true; clearTimeout(toastT); };
+  clearTimeout(toastT);
+  toastT = setTimeout(() => { t.hidden = true; }, 5000);
+}
+function undoable(msg){
+  const snap = JSON.parse(JSON.stringify(S));
+  toast(msg, () => { S = snap; save(); });
+}
+window.bulkMove = () => { const p = $('#bulkP').value; S.stock.forEach(i => { if (SEL.has(i.id)) i.p = p; }); done(); };
+window.bulkNP = v => { S.stock.forEach(i => { if (SEL.has(i.id)){ i.np = v; if (v) i.exp = ''; } }); done(); };
+window.bulkDel = () => { undoable(SEL.size + ' article(s) supprimé(s)'); S.stock = S.stock.filter(i => !SEL.has(i.id)); done(); };
+window.bulkClear = () => { SEL.clear(); renderAll(); };
+window.patch = (id, k, v) => {
+  const it = S.stock.find(i => i.id === id);
+  if (!it) return;
+  if (k === 'u') it.u = unitFrom(v);
+  else if (k === 'np'){ it.np = v; if (v) it.exp = ''; }
+  else if (k === 'exp') it.exp = v;
+  else it[k] = v;
+  save();
+};
+window.delItem = id => { undoable('Article supprimé'); S.stock = S.stock.filter(i => i.id !== id); closeSheet(); save(); };
+window.openEdit = id => {
+  const it = S.stock.find(i => i.id === id);
+  if (!it) return;
+  $('#sheetBody').innerHTML = `<div style="position:relative;padding:14px 40px 0 0"><button class="xbtn" onclick="closeSheet()" aria-label="Fermer">✕</button><h2 style="margin:0 0 10px;font-size:20px">Modifier l’article</h2></div>
+    <form id="fEdit" class="group">${fields(it, 'e')}</form>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin:14px 0 4px">
+      <button class="pill solid sm" type="submit" form="fEdit">Enregistrer</button>
+      <button class="pill sm" type="button" onclick="openUse('${id}')">Consommer une partie</button>
+      <button class="pill sm gray" type="button" onclick="delItem('${id}')">Supprimer</button>
+    </div>`;
+  $('#fEdit').addEventListener('submit', e => {
+    e.preventDefault();
+    Object.assign(it, readItem('e'));
+    closeSheet(); save();
+  });
+  $('#sheetWrap').style.display = 'block';
+};
+window.openUse = id => {
+  const it = S.stock.find(i => i.id === id);
+  if (!it) return;
+  const sameFam = unitOpts().filter(x => fam(x) === fam(it.u));
+  $('#sheetBody').innerHTML = `<h2>Consommer</h2>
+    <p class="muted" style="margin:0 0 8px">${esc(it.n)} · stock actuel : ${esc(it.q)} ${esc(it.u)}</p>
+    <form id="fUse" class="group">
+      <div class="field"><label for="uQ">Quantité utilisée</label><input id="uQ" type="number" step="any" min="0" placeholder="0" required></div>
+      <div class="field"><label for="uU">Unité</label><select id="uU">${sameFam.map(x => `<option ${x === it.u ? 'selected' : ''}>${esc(x)}</option>`).join('')}</select></div>
+      <div class="field"><label>Il restera</label><span id="uR" class="muted">${esc(it.q)} ${esc(it.u)}</span></div>
+      <div class="item"><button class="btn" type="submit">Valider</button></div>
+    </form>
+    <p id="uE" class="warn" style="padding:0 4px;min-height:1em"></p>
+    <button class="btn" onclick="openEdit('${id}')">Retour</button>`;
+  const preview = () => {
+    const used = num($('#uQ').value) * fac($('#uU').value) / fac(it.u);
+    const left = Math.round((num(it.q) - used) * 1000) / 1000;
+    $('#uR').textContent = left > 0 ? `${left} ${it.u}` : 'plus rien (retiré du stock)';
+    $('#uE').textContent = used > num(it.q) + 1e-9 ? 'La quantité utilisée dépasse le stock.' : '';
+  };
+  $('#uQ').addEventListener('input', preview);
+  $('#uU').addEventListener('change', preview);
+  $('#fUse').addEventListener('submit', e => {
+    e.preventDefault();
+    const used = num($('#uQ').value) * fac($('#uU').value) / fac(it.u);
+    if (!(used > 0) || used > num(it.q) + 1e-9){ preview(); return; }
+    const left = Math.round((num(it.q) - used) * 1000) / 1000;
+    if (left <= 0) S.stock = S.stock.filter(i => i.id !== id);
+    else it.q = left;
+    closeSheet(); save();
+  });
+  $('#sheetWrap').style.display = 'block';
+};
+window.openRecipe = id => {
+  const r = S.recipes.find(x => x.id === id);
+  if (!r) return;
+  const txt = r.ing.map(([n, q, u]) => `${n} | ${q} | ${u}`).join('\n');
+  $('#sheetBody').innerHTML = `<h2>Modifier la recette</h2>
+    <form id="fRecE" class="group">
+      <div class="field"><label for="reN">Nom</label><input id="reN" value="${esc(r.n)}" required></div>
+      <div class="field"><label for="reT">Durée (min)</label><input id="reT" type="number" min="0" value="${esc(r.t || '')}"></div>
+      <div class="field"><label for="reP">Pour (personnes)</label><input id="reP" type="number" min="1" value="${esc(r.ps || 4)}"></div>
+      <div class="field"><label for="reF">Se congèle</label><label class="sw"><input type="checkbox" id="reF" ${r.freeze ? 'checked' : ''}><i></i></label></div>
+      <div class="field area"><label for="reI">Ingrédients</label><textarea id="reI">${esc(txt)}</textarea></div>
+      <div class="item"><button class="btn" type="submit">Enregistrer</button></div>
+    </form>
+    <button class="btn" onclick="closeSheet()">Fermer</button>`;
+  $('#fRecE').addEventListener('submit', e => {
+    e.preventDefault();
+    r.n = $('#reN').value.trim();
+    r.t = num($('#reT').value);
+    r.ps = Math.max(1, num($('#reP').value) || 4);
+    r.freeze = $('#reF').checked;
+    r.ing = $('#reI').value.split('\n').map(l => l.split('|').map(x => x.trim())).filter(x => x[0]).map(x => [x[0], x[1] || '', unitFrom(x[2] || 'pièce')]);
+    closeSheet(); save();
+  });
+  $('#sheetWrap').style.display = 'block';
+};
+window.openPlan = id => {
+  const r = S.recipes.find(x => x.id === id);
+  if (!r) return;
+  $('#sheetBody').innerHTML = `<h2>Planifier · ${esc(r.n)}</h2>
+    <form id="fPlanS" class="group">
+      <div class="field"><label for="ppD">Date</label><input id="ppD" type="date" value="${today()}" required></div>
+      <div class="field"><label for="ppS">Repas</label><select id="ppS"><option value="midi-solo">Midi (moi)</option><option value="soir-famille" selected>Soir (famille)</option></select></div>
+      <div class="field"><label for="ppN">Personnes</label><input id="ppN" type="number" min="1" value="${vp(r)}"></div>
+      <div class="item"><button class="btn" type="submit">Ajouter au calendrier</button></div>
+    </form>
+    <div class="group-title">Déjà prévu ce jour-là</div>
+    <div class="group" id="ppDay"></div>
+    <button class="btn" onclick="closeSheet()">Fermer</button>`;
+  const showDay = () => {
+    const d = $('#ppD').value;
+    const items = S.plan.filter(p => p.d === d);
+    $('#ppDay').innerHTML = items.length ? items.map(p => {
+      const pr = S.recipes.find(x => x.id === p.r);
+      return `<div class="item"><div class="main">${pr ? esc(pr.n) : '—'}<div class="sub">${p.s === 'midi-solo' ? 'Midi (moi)' : 'Soir (famille)'} · ${p.n || 1} pers.</div></div></div>`;
+    }).join('') : '<div class="empty">Rien de prévu ce jour-là.</div>';
+  };
+  showDay();
+  $('#ppD').addEventListener('change', showDay);
+  $('#fPlanS').addEventListener('submit', e => {
+    e.preventDefault();
+    S.plan.push({id: uid(), d: $('#ppD').value, s: $('#ppS').value, r: id, n: Math.max(1, num($('#ppN').value) || 1)});
+    closeSheet(); save(); tab('semaine');
+  });
+  $('#sheetWrap').style.display = 'block';
+};
+const showSheet = html => { $('#sheetBody').innerHTML = html; $('#sheetWrap').style.display = 'block'; };
+window.addStockSheet = () => {
+  showSheet(`<h2>Ajouter un article</h2><form id="fGen" class="group">${fields({}, 'g')}<div class="item"><button class="btn" type="submit">Ajouter au stock</button></div></form><button class="btn" onclick="closeSheet()">Fermer</button>`);
+  $('#fGen').addEventListener('submit', e => { e.preventDefault(); const it = readItem('g'); if (!it.n || !it.q) return; S.stock.push({id: uid(), ...it}); closeSheet(); save(); });
+};
+window.newRecipeSheet = () => {
+  showSheet(`<h2>Nouvelle recette</h2><form id="fGen" class="group">
+    <div class="field"><label for="gN">Nom</label><input id="gN" placeholder="Nom de la recette" required></div>
+    <div class="field"><label for="gT">Durée (min)</label><input id="gT" type="number" min="0" placeholder="30"></div>
+    <div class="field"><label for="gP">Pour (personnes)</label><input id="gP" type="number" min="1" value="4"></div>
+    <div class="field"><label for="gF">Se congèle</label><label class="sw"><input type="checkbox" id="gF"><i></i></label></div>
+    <div class="field area"><label for="gI">Ingrédients</label><textarea id="gI" placeholder="nom | quantité | unité"></textarea></div>
+    <div class="item"><button class="btn" type="submit">Enregistrer</button></div></form>
+    <button class="btn" onclick="closeSheet()">Fermer</button>`);
+  $('#fGen').addEventListener('submit', e => {
+    e.preventDefault();
+    const ing = $('#gI').value.split('\n').map(l => l.split('|').map(x => x.trim())).filter(x => x[0]).map(x => [x[0], x[1] || '', unitFrom(x[2] || 'pièce')]);
+    S.recipes.push({id: uid(), n: $('#gN').value.trim(), t: num($('#gT').value), freeze: $('#gF').checked, ps: Math.max(1, num($('#gP').value) || 4), ing});
+    closeSheet(); save();
+  });
+};
+window.newPlanSheet = () => {
+  showSheet(`<h2>Ajouter au planning</h2><form id="fGen" class="group">
+    <div class="field"><label for="gR">Recette</label><select id="gR">${S.recipes.map(r => `<option value="${r.id}">${esc(r.n)}</option>`).join('')}</select></div>
+    <div class="field"><label for="gD">Jour</label><input id="gD" type="date" value="${today()}"></div>
+    <div class="field"><label for="gS">Repas</label><select id="gS" onchange="$('#gPN').value = this.value === 'midi-solo' ? 1 : 3"><option value="midi-solo">Midi (moi)</option><option value="soir-famille" selected>Soir (famille)</option></select></div>
+    <div class="field"><label for="gPN">Personnes</label><input id="gPN" type="number" min="1" value="3"></div>
+    <div class="item"><button class="btn" type="submit">Ajouter au calendrier</button></div></form>
+    <button class="btn" onclick="closeSheet()">Fermer</button>`);
+  $('#fGen').addEventListener('submit', e => {
+    e.preventDefault();
+    S.plan.push({id: uid(), d: $('#gD').value, s: $('#gS').value, r: $('#gR').value, n: Math.max(1, num($('#gPN').value) || 1)});
+    closeSheet(); save();
+  });
+};
+window.addCourseSheet = () => {
+  showSheet(`<h2>Ajouter à la liste</h2><form id="fGen" class="group">
+    <div class="field"><label for="gN">Aliment</label><input id="gN" placeholder="Lait" required></div>
+    <div class="field"><label for="gQ">Quantité</label><input id="gQ" type="number" step="any" min="0" placeholder="1" required></div>
+    <div class="field"><label for="gU">Unité</label><select id="gU">${unitOpts().map(x => `<option>${esc(x)}</option>`).join('')}</select></div>
+    <div class="item"><button class="btn" type="submit">Ajouter à la liste</button></div></form>
+    <button class="btn" onclick="closeSheet()">Fermer</button>`);
+  $('#fGen').addEventListener('submit', e => {
+    e.preventDefault();
+    if (!$('#gN').value.trim()) return;
+    S.extra = [...(S.extra || []), {id: uid(), n: $('#gN').value.trim(), q: $('#gQ').value, u: $('#gU').value}];
+    closeSheet(); save();
+  });
+};
+window.famSheet = () => {
+  showSheet(`<h2>Ajouter un membre</h2><form id="fGen" class="group">
+    <div class="field"><label for="gN">Prénom</label><input id="gN" required></div>
+    <div class="field"><label for="gD">Refuse</label><input id="gD" placeholder="champignons, olives"></div>
+    <div class="item"><button class="btn" type="submit">Ajouter</button></div></form>
+    <button class="btn" onclick="closeSheet()">Fermer</button>`);
+  $('#fGen').addEventListener('submit', e => {
+    e.preventDefault();
+    S.family.push({id: uid(), n: $('#gN').value.trim(), dis: $('#gD').value.split(',').map(x => key(x)).filter(Boolean)});
+    closeSheet(); save();
+  });
+};
+window.jourAddSheet = () => {
+  showSheet(`<h2>Ajouter</h2>
+    <div class="group">
+      <div class="item" onclick="addStockSheet()" style="cursor:pointer"><div class="main">🧺 Un article au stock<div class="sub">Ingrédient ou plat prêt</div></div><span class="muted">›</span></div>
+      <div class="item" onclick="newRecipeSheet()" style="cursor:pointer"><div class="main">📖 Une recette<div class="sub">Nom, durée, ingrédients</div></div><span class="muted">›</span></div>
+    </div>
+    <button class="btn" onclick="closeSheet()">Fermer</button>`);
+};
+window.openAdd = () => { ({reglages: () => {}, jour: jourAddSheet, stock: addStockSheet, recettes: newRecipeSheet, semaine: newPlanSheet, courses: addCourseSheet, famille: famSheet})[window.currentTab || 'stock'](); };
+// Cuisson : l'utilisateur ajuste les quantités réellement utilisées avant de les retirer du stock
+function deduct(used){
+  undoable('Cuisson enregistrée');
+  used.forEach(([nm, qty, u]) => {
+    let need = num(qty) * fac(u);
+    const items = S.stock.filter(i => !i.pp && key(i.n) === key(nm) && fam(i.u) === fam(u))
+      .sort((a, b) => (a.exp || '9999') < (b.exp || '9999') ? -1 : 1);
+    for (const it of items){
+      if (need <= 0) break;
+      const avail = num(it.q) * fac(it.u);
+      const take = Math.min(avail, need);
+      it.q = +((avail - take) / fac(it.u)).toFixed(3);
+      need -= take;
+    }
+  });
+  S.stock = S.stock.filter(i => num(i.q) > 0);
+}
+window.cooked = id => {
+  const r = S.recipes.find(x => x.id === id);
+  if (!r) return;
+  const f = vp(r) / (r.ps || 4);
+  showSheet(`<div style="position:relative;padding:14px 40px 0 0"><button class="xbtn" onclick="closeSheet()" aria-label="Fermer">✕</button>
+    <h2 style="margin:0 0 4px;font-size:20px">Cuisiner · ${esc(r.n)}</h2>
+    <p class="muted" style="margin:0 0 10px">Ajustez les quantités réellement utilisées. Seules ces quantités sortent du stock.</p></div>
+    <form id="fCook" class="group">
+      ${r.ing.map(([nm, q, u], i) => `<div class="field"><label for="ck${i}" style="width:auto;flex:1">${iconFor(nm)} ${esc(nm)}</label><input id="ck${i}" type="number" step="any" min="0" value="${qtxt(num(q) * f, u).replace(',', '.')}" style="width:72px;text-align:right"><span class="muted" style="width:50px;text-align:left">${esc(u)}</span></div>`).join('')}
+    </form>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin:14px 0 4px">
+      <button class="pill solid sm" type="submit" form="fCook">Valider la cuisson</button>
+      <button class="pill sm gray" type="button" onclick="closeSheet()">Annuler</button>
+    </div>`);
+  $('#fCook').addEventListener('submit', e => {
+    e.preventDefault();
+    const used = r.ing.map(([nm, , u], i) => [nm, $('#ck' + i).value, u]);
+    deduct(used);
+    closeSheet(); save();
+  });
+};
+window.closeSheet = () => { $('#sheetWrap').style.display = 'none'; };
+
+// Recettes, planning, famille
+const persCtl = (r, detail) => {
+  const inc = detail ? 'rpeopleD' : 'rpeople', set = detail ? 'rsetpeopleD' : 'rsetpeople';
+  return `<div class="pers"><button onclick="${inc}('${r.id}',-1)" aria-label="Moins de personnes">−</button><input type="number" min="1" value="${vp(r)}" onchange="${set}('${r.id}', this.value)" aria-label="Nombre de personnes"><button onclick="${inc}('${r.id}',1)" aria-label="Plus de personnes">+</button><span>pers.</span></div>`;
+};
+window.rpeopleD = (id, d) => { rpeople(id, d); openDetail(id); };
+window.rsetpeopleD = (id, v) => { rsetpeople(id, v); openDetail(id); };
+function renderRecettes(){
+  $('#recList').innerHTML = S.recipes.length ? [...S.recipes].sort((a, b) => recipeStatus(b).pct - recipeStatus(a).pct).map(r => {
+    const st = recipeStatus(r);
+    const share = st.miss.length / r.ing.length;
+    const color = st.miss.length === 0 ? 'var(--green)' : share < 0.5 ? 'var(--orange)' : 'var(--red)';
+    const label = st.miss.length === 0 ? 'Tous les ingrédients sont en stock' : st.miss.length + ' ingrédient(s) manquant(s)';
+    return `<div class="rcard" style="cursor:pointer" onclick="if(!event.target.closest('button,input'))openDetail('${r.id}')">
+      <span class="dot" style="background:${color}" title="${label}"></span>
+      <div class="rtitle">${esc(r.n)}</div>
+      <div class="tags">${r.t ? `<span class="tagb">${r.t} min</span>` : ''}${r.freeze ? '<span class="tagb green">Se congèle</span>' : ''}</div>
+      ${persCtl(r, false)}
+      <div style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap">
+        <button class="pill solid sm" onclick="openPlan('${r.id}')">Planifier</button>
+        <button class="pill sm" onclick="openDetail('${r.id}')">Détail</button>
+      </div></div>`;
+  }).join('') : '<div class="empty">Aucune recette.</div>';
+}
+window.openDetail = id => {
+  const r = S.recipes.find(x => x.id === id);
+  if (!r) return;
+  const st = recipeStatus(r);
+  const share = st.miss.length / r.ing.length;
+  const color = st.miss.length === 0 ? 'var(--green)' : share < 0.5 ? 'var(--orange)' : 'var(--red)';
+  showSheet(`<div style="position:relative;padding:14px 40px 0 0">
+    <button class="xbtn" onclick="closeSheet()" aria-label="Fermer">✕</button>
+    <div style="display:flex;align-items:center;gap:10px"><span style="width:12px;height:12px;border-radius:50%;background:${color};flex-shrink:0"></span><h2 style="margin:0;font-size:20px">${esc(r.n)}</h2></div>
+    <div class="tags" style="margin-top:8px">${r.t ? `<span class="tagb">${r.t} min</span>` : ''}${r.freeze ? '<span class="tagb green">Se congèle</span>' : ''}</div>
+    <div style="margin:8px 0 4px">${persCtl(r, true)}</div>
+  </div>
+    <div class="group" style="padding:8px 16px">
+      ${r.ing.map(([nm, q, u]) => { const qv = num(q) * vp(r) / (r.ps || 4); return `<div style="padding:6px 0;display:flex;align-items:center;gap:10px"><span style="font-size:20px;width:26px;text-align:center">${iconFor(nm)}</span><span>${qtxt(qv, u)} ${esc(u)} ${esc(nm)}</span></div>`; }).join('')}
+    </div>
+    <div class="meter"><i style="width:${st.pct}%"></i></div>
+    ${st.miss.length ? `<div class="muted">Manque : ${esc(st.miss.join(', '))}</div>` : '<div class="muted">Tout est en stock.</div>'}
+    ${st.old.length ? `<div class="warn">Produit périmé à vérifier : ${esc(st.old.join(', '))}</div>` : ''}
+    ${conflicts(r).map(c => `<div class="warn">Pour ${esc(c.name)} : sans ${esc(c.bad.join(', '))}</div>`).join('')}
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin:14px 0 4px">
+      <button class="pill solid sm" onclick="openPlan('${r.id}')">Planifier</button>
+      <button class="pill sm" onclick="cooked('${r.id}')">Cuisiné</button>
+      <button class="pill sm" onclick="openRecipe('${r.id}')">Modifier</button>
+      <button class="pill sm gray" onclick="delRecipe('${r.id}');closeSheet()">Supprimer</button>
+    </div>`);
+};
+function renderPlan(){
+  const items = [...S.plan].sort((a, b) => (a.d + a.s) < (b.d + b.s) ? -1 : 1);
+  $('#planList').innerHTML = items.length ? items.map(p => {
+    const r = S.recipes.find(x => x.id === p.r);
+    if (!r) return '';
+    return `<div class="item" style="display:block"><div style="display:flex;justify-content:space-between;align-items:center">
+      <div><div>${esc(r.n)}</div><div class="sub">${fmtD(p.d)} · ${p.s === 'midi-solo' ? 'Midi (moi)' : 'Soir (famille)'} · ${p.n || 1} pers.</div></div>
+      <button class="pill" onclick="delPlan('${p.id}')">Retirer</button></div>
+      ${conflicts(r).map(c => `<div class="warn">Pour ${esc(c.name)} : sans ${esc(c.bad.join(', '))}</div>`).join('')}</div>`;
+  }).join('') : '<div class="empty">Planning vide.</div>';
+  $('#pR').innerHTML = S.recipes.map(r => `<option value="${r.id}">${esc(r.n)}</option>`).join('');
+}
+function renderCourses(){
+  const extras = (S.extra || []).map(e => ({n: e.n, u: e.u, miss: num(e.q), extra: e.id}));
+  const list = needs().concat(extras);
+  window._needs = list;
+  const items = list.map((x, idx) => ({...x, idx, ray: rayonOf(x.n)}));
+  $('#courseList').innerHTML = list.length ? RAYONS.map(r => {
+    const xs = items.filter(x => x.ray === r);
+    return xs.length ? `<div class="group-title">${r}</div><div class="icons" style="padding:12px">${xs.map(x => `<div class="ico" style="cursor:default"><span>${iconFor(x.n)}</span><small>${esc(x.n)}</small><em>${qtxt(x.miss, x.u)} ${esc(x.u)}</em><button class="pill solid" style="margin-top:4px" onclick="bought(${x.idx})">Acheté</button></div>`).join('')}</div>` : '';
+  }).join('') : '<div class="empty">Rien à acheter pour le moment.</div>';
+}
+function renderFamille(){
+  if (!$('#famList')) return;
+  $('#famList').innerHTML = S.family.map(f => `<div class="item"><div class="main">${esc(f.n)}<div class="sub">Refuse : ${f.dis.length ? esc(f.dis.join(', ')) : 'rien'}</div></div>
+    <button class="pill" onclick="delFam('${f.id}')">Supprimer</button></div>`).join('')
+    || '<div class="empty">Ajoutez chaque membre et ses refus.</div>';
+}
+// Quantité visuelle : barre proportionnelle (poids, volume) ou points (comptage)
+function qVisual(i, items){
+  const q = num(i.q);
+  if (fam(i.u).startsWith('c:')){
+    const d = Math.min(Math.round(q), 8);
+    return `<span class="dots">${'●'.repeat(d)}${q > 8 ? ' +' + fmtQ(q - 8) : ''}</span>`;
+  }
+  const same = items.filter(x => fam(x.u) === fam(i.u));
+  const max = Math.max(...same.map(x => num(x.q) * fac(x.u))) || 1;
+  const pct = Math.max(8, Math.round(q * fac(i.u) / max * 100));
+  return `<span class="qbar"><i style="width:${pct}%"></i></span>`;
+}
+function renderPlaces(){
+  const ico = (i, items) => `<button class="ico${isExpired(i) ? ' exp' : ''}${i.pp ? ' ppi' : ''}" onclick="openEdit('${i.id}')" title="${esc(i.n)} · ${esc(i.q)} ${esc(i.u)}"><span>${icoOf(i)}</span><small>${esc(i.n)}</small><em>${esc(fmtQ(num(i.q)))} ${esc(i.u)}</em></button>`;
+  $('#placeView').innerHTML = PLACES.map(pl => {
+    const items = S.stock.filter(i => i.p === pl).sort(sortStock);
+    const ings = items.filter(i => !i.pp), pps = items.filter(i => i.pp);
+    return `<div class="group" style="padding:12px 16px 14px"><div class="row" style="margin-bottom:12px;gap:16px"><strong>${PI[pl]} ${pl}</strong><span class="muted">${items.length} produit${items.length > 1 ? 's' : ''}</span></div>
+      ${groupByUnit(ings).map(([u, arr]) => `<div class="icons">${arr.map(i => ico(i, ings)).join('')}</div>`).join('')}
+      ${pps.length ? `<div class="muted" style="margin:14px 0 8px">Plats prêts</div>` + groupByUnit(pps).map(([u, arr]) => `<div class="icons">${arr.map(i => ico(i, pps)).join('')}</div>`).join('') : ''}
+      ${items.length ? '' : '<div class="muted">Vide</div>'}</div>`;
+  }).join('');
+}
+function setView(v){
+  $('#stockList').style.display = v === 'list' ? '' : 'none';
+  $('#placeView').style.display = v === 'place' ? '' : 'none';
+  $('#vList').className = v === 'list' ? 'pill solid' : 'pill';
+  $('#vPlace').className = v === 'place' ? 'pill solid' : 'pill';
+}
+const dateLabel = () => { const d = new Date().toLocaleDateString('fr-FR', {weekday: 'long', day: 'numeric', month: 'long'}); return d.charAt(0).toUpperCase() + d.slice(1); };
+function renderJour(){
+  const t = today();
+  const tm = new Date(Date.now() + 864e5).toISOString().slice(0, 10);
+  const rName = id => (S.recipes.find(r => r.id === id) || {n: '—'}).n;
+  const planOf = d => S.plan.filter(p => p.d === d).sort((a, b) => a.s < b.s ? -1 : 1);
+  const line = p => `<div class="item"><div class="main">${esc(rName(p.r))}<div class="sub">${p.s === 'midi-solo' ? 'Midi (moi)' : 'Soir (famille)'} · ${p.n || 1} pers.</div></div></div>`;
+  const soon = S.stock.filter(i => !i.pp && !i.np && i.exp && (new Date(i.exp) - new Date(t)) / 864e5 <= 3).sort((a, b) => a.exp < b.exp ? -1 : 1);
+  const ranked = [...S.recipes].sort((a, b) => recipeStatus(b).pct - recipeStatus(a).pct).slice(0, 3);
+  const todayPlan = planOf(t), tomorrowPlan = planOf(tm);
+  $('#jourBody').innerHTML = `
+    <div class="group-title">Aujourd’hui</div>
+    <div class="group">${todayPlan.length ? todayPlan.map(line).join('') : '<div class="empty">Rien de prévu aujourd’hui.</div>'}</div>
+    <div class="group-title">À utiliser vite</div>
+    <div class="group">${soon.length ? soon.map(i => `<div class="item"><div class="main">${icoOf(i)} ${esc(i.n)} <span class="muted">${esc(i.q)} ${esc(i.u)}</span><div class="sub">${isExpired(i) ? '<span style="color:var(--red);font-weight:700">Périmé depuis le ' + fmtD(i.exp) + '</span>' : 'avant le ' + fmtD(i.exp)}</div></div></div>`).join('') : '<div class="empty">Rien ne périme dans les 3 prochains jours.</div>'}</div>
+    <div class="group-title">Recettes possibles</div>
+    <div class="group">${ranked.map(r => {
+      const st = recipeStatus(r);
+      const c = st.miss.length === 0 ? 'var(--green)' : (st.miss.length / r.ing.length < 0.5 ? 'var(--orange)' : 'var(--red)');
+      return `<div class="item" onclick="openPlan('${r.id}')" style="cursor:pointer"><span style="width:12px;height:12px;border-radius:50%;background:${c};flex-shrink:0"></span><div class="main">${esc(r.n)}<div class="sub">${st.pct} % en stock · toucher pour planifier</div></div></div>`;
+    }).join('')}</div>
+    <div class="group-title">Demain</div>
+    <div class="group">${tomorrowPlan.length ? tomorrowPlan.map(line).join('') : '<div class="empty">Rien de prévu demain.</div>'}</div>`;
+}
+const RAYONS = ['Boissons', 'Surgelés', 'Boucherie et poisson', 'Crèmerie et œufs', 'Fruits et légumes', 'Épicerie', 'Autres'];
+const RAYON_RULES = [
+  [/\beau\b|\bjus\b/, 'Boissons'],
+  [/surgel|petits pois/, 'Surgelés'],
+  [/steak|boeuf|tournedos|brochette|viande|hache|poulet|dinde|cuisse|pilon|filet|saucisse|merguez|jambon|cabillaud|truite|sardine|maquereau|thon|poisson|cordon/, 'Boucherie et poisson'],
+  [/fromage|gruyere|chevre|saint moret|yaourt|lait|creme|beurre|oeuf/, 'Crèmerie et œufs'],
+  [/carotte|courgette|pomme de terre|oignon|ratatouille|legume/, 'Fruits et légumes'],
+  [/farine|sucre|levure|pate|riz|semoule|lentille|pois chiche|haricot|sauce|huile|vinaigre|moutarde|olive|pesto|cassoulet|conserve|boite|\bsel\b|chocolat|gateau|biscuit|galette|croutons|pain|cannelloni|nouille|spaghetti/, 'Épicerie'],
+];
+const rayonOf = n => { const k = key(n); const r = RAYON_RULES.find(([re]) => re.test(k)); return r ? r[1] : 'Autres'; };
+
+const ACCENTS = [['Bleu','#0A84FF'],['Violet','#BF5AF2'],['Rose','#FF2D55'],['Orange','#FF9F0A'],['Vert','#30D158'],['Turquoise','#64D2FF'],['Indigo','#5E5CE6']];
+window.setAccent = h => { S.settings = {...(S.settings || {}), accent: h}; save(); };
+function applyAccent(){
+  const c = (S.settings && S.settings.accent) || '#0A84FF';
+  document.documentElement.style.setProperty('--blue', c);
+  document.documentElement.style.setProperty('--blue-hi', c);
+  const sw = document.getElementById('swatches');
+  if (sw) sw.innerHTML = ACCENTS.map(([n, h]) => `<button onclick="setAccent('${h}')" aria-label="${n}" title="${n}" style="width:40px;height:40px;border-radius:50%;border:0;background:${h};cursor:pointer;box-shadow:${h === c ? `0 0 0 3px var(--bg), 0 0 0 5px ${h}` : 'none'}"></button>`).join('');
+}
+function renderAll(){ applyAccent(); renderJour(); renderStock(); renderPlaces(); renderRecettes(); renderPlan(); renderCourses(); renderFamille(); }
+
+window.delRecipe = id => { undoable('Recette supprimée'); S.recipes = S.recipes.filter(r => r.id !== id); S.plan = S.plan.filter(p => p.r !== id); save(); };
+window.addPlan = id => { S.plan.push({id: uid(), d: today(), s: 'soir-famille', r: id, n: vp(S.recipes.find(x => x.id === id) || {})}); save(); tab('semaine'); };
+window.delPlan = id => { undoable('Repas retiré du planning'); S.plan = S.plan.filter(p => p.id !== id); save(); };
+window.delFam = id => { undoable('Membre supprimé'); S.family = S.family.filter(f => f.id !== id); save(); };
+window.bought = i => {
+  const x = window._needs[i];
+  S.stock.push({id: uid(), n: x.n, q: Math.round(x.miss * 100) / 100, u: x.u, p: 'Placard', np: false, exp: '', added: today()});
+  if (x.extra) S.extra = S.extra.filter(e => e.id !== x.extra);
+  save();
+};
+
+// Sauvegarde : normalisation, stockage local, compte
+function save(){
+  normalize();
+  try { localStorage.setItem(KEY, JSON.stringify(S)); } catch(e) {}
+  if (DOC) DOC.set(S).catch(() => {});
+  renderAll();
+}
+function count(x){ return (x.stock||[]).length + (x.plan||[]).length + (x.family||[]).length + (x.recipes||[]).length; }
+function applyRemote(d){
+  if (!d) return;
+  const next = Object.assign({stock:[], recipes:[], family:[], plan:[], custom:[]}, d);
+  if (!next.recipes.length) next.recipes = SEED;
+  if (JSON.stringify(next) === JSON.stringify(S)) return;
+  S = next; normalize();
+  try { localStorage.setItem(KEY, JSON.stringify(S)); } catch(e) {}
+  renderAll();
+}
+async function connect(){
+  if (typeof claude === 'undefined') { $('#sync').textContent = 'Enregistrement sur cet appareil uniquement'; return; }
+  try {
+    const db = await claude.use('db');
+    const user = await claude.use('user');
+    if (!db || !user) return;
+    const uid = await user.id();
+    DOC = db.doc('data/users/' + uid + '/state');
+    const snap = await DOC.get();
+    if (!snap.exists || count(S) > count(snap.data())) await DOC.set(S);
+    else applyRemote(snap.data());
+    DOC.onSnapshot(s => { if (s.exists && !s.metadata.hasPendingWrites) applyRemote(s.data()); });
+    $('#sync').textContent = 'Synchronisé avec votre compte';
+  } catch(e) {
+    $('#sync').textContent = 'Enregistré sur cet appareil uniquement';
+  }
+}
+
+function tab(name){
+  window.currentTab = name;
+  document.querySelectorAll('section').forEach(s => s.classList.toggle('on', s.id === name));
+  document.querySelectorAll('nav button').forEach(b => b.setAttribute('aria-selected', b.dataset.tab === name));
+  $('#title').textContent = name === 'jour' ? dateLabel() : document.getElementById(name).dataset.title;
+  $('#title').style.fontSize = name === 'jour' ? '26px' : '';
+  window.scrollTo({top: 0});
+}
+document.querySelectorAll('nav button').forEach(b => b.addEventListener('click', () => tab(b.dataset.tab)));
+matchMedia('(min-width:900px)').addEventListener('change', renderStock);
+$('#vList').onclick = () => setView('list');
+$('#vPlace').onclick = () => setView('place');
+$('#addBtn').onclick = () => openAdd();
+
+// Formulaires
+$('#fStock').innerHTML = fields({}, 'a') + '<div class="item"><button class="btn" type="submit">Ajouter au stock</button></div>';
+$('#fStock').addEventListener('submit', e => {
+  e.preventDefault();
+  const it = readItem('a');
+  if (!it.n || !it.q) return;
+  S.stock.push({id: uid(), ...it});
+  e.target.querySelector('#aN').value = '';
+  e.target.querySelector('#aQ').value = '';
+  e.target.querySelector('#aA').value = today();
+  save();
+});
+$('#fRec').addEventListener('submit', e => {
+  e.preventDefault();
+  const ing = $('#rI').value.split('\n').map(l => l.split('|').map(x => x.trim())).filter(x => x[0]).map(x => [x[0], x[1] || '', unitFrom(x[2] || 'pièce')]);
+  S.recipes.push({id: uid(), n: $('#rN').value.trim(), t: num($('#rT').value), freeze: $('#rF').checked, ps: Math.max(1, num($('#rP').value) || 4), ing});
+  e.target.reset(); save();
+});
+$('#fPlan').addEventListener('submit', e => {
+  e.preventDefault();
+  S.plan.push({id: uid(), d: $('#pD').value, s: $('#pS').value, r: $('#pR').value, n: Math.max(1, num($('#pN').value) || 1)});
+  save();
+});
+
+normalize();
+renderAll();
+setView('place');
+tab('jour');
+connect();
+</script>
+</body>
+</html>
